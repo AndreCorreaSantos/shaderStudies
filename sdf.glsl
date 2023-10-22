@@ -80,7 +80,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord ){
     vec2 uv = (fragCoord/iResolution.xy);
     vec3 seed = vec3(uv,iTime*0.5);
 
-    col = vec3(snoise(seed*100000.),snoise(seed*1000.),snoise(seed*10000.));
+    col = vec3(snoise(seed*2.),snoise(seed*1.),snoise(seed*2.));
 
     fragColor = vec4(col,1.0);
 }

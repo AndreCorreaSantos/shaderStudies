@@ -1,14 +1,14 @@
 
 
-
+precision mediump float;
 
 const int MAX_MARCHING_STEPS = 1000;
-const float FOCALDIST = 10000.0f;
-const float THRESHOLD = 0.01;
-const float MAX_STEP_SIZE = 10.0;
-const float MIN_STEP_SIZE = 0.1;
+const float THRESHOLD = 0.00000001;
 
 float sdSphere(vec3 p,vec3 c,float r) {
+  c.x = sin(iTime) * 0.1;
+  c.y = cos(iTime) * 0.1;
+  c.z = sin(iTime) * 0.1; 
   return length(p - c) - r;
 }
 
@@ -20,26 +20,31 @@ float sdRoundBox( vec3 p, vec3 b, float r )
 
 
 
-float stepSize = 0.02;
+float stepSize = 0.05;
 
 vec3 repeat(vec3 p){
-  float s = 6.0;
+  float s = 3.0;
   p.x = p.x - s*round(p.x/s);
   p.y = p.y - s*round(p.y/s);
   p.z = p.z - s*round(p.z/s);
   return p;
 }
 
+float opSmoothUnion( float d1, float d2, float k ) {
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h); }
+
 float scene(vec3 p) {
 
   p = repeat(p);
-  // float d = sdRoundBox(p, vec3(0.5, 0.5, 0.5), 0.5);
-  float d = sdSphere(p, vec3(0, 0, 0), 1.0);
+  float box = sdRoundBox(p, vec3(0.1, 0.1, 0.1), 0.1);
+  float sphere = sdSphere(p, vec3(0, 0, 0), 0.25);
+  float d = opSmoothUnion(box, sphere, 0.1);
   return d;
 }
 
 vec3 calcNormal(vec3 p) {
-    float eps = 0.0001; // Adjust as needed
+    float eps = 0.00001; // Adjust as needed
     
     float dx = (scene(p + vec3(eps, 0, 0)) - scene(p - vec3(eps, 0, 0))) / (2.0 * eps);
     float dy = (scene(p + vec3(0, eps, 0)) - scene(p - vec3(0, eps, 0))) / (2.0 * eps);
@@ -51,6 +56,10 @@ vec3 calcNormal(vec3 p) {
 vec3 march(vec3 cam, vec3 dir) {
   float totalDistance = 0.0;
   vec3 currentPos = cam;
+  vec3 fogColor = vec3(0.8, 0.8, 0.8); // Adjust as needed
+  float fogDensity = 0.05; // Adjust as needed
+  vec3 col = vec3(0.0);
+
   for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
 
     float dist = scene(currentPos);
@@ -64,13 +73,13 @@ vec3 march(vec3 cam, vec3 dir) {
       return col;
     }
     totalDistance += dist;
-    if (totalDistance > FOCALDIST) {
-      return vec3(0.0, 0.0, 0.0);
-    }
     currentPos += dir * stepSize;
   }
-  return vec3(0.0, 0.0, 0.0);
+
+
+  return col;
 }
+
 float zoomFactor = 1.0;
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -90,9 +99,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     float rotX = iMouse.y / iResolution.y * 8.; // Adjust the sensitivity as needed
     float rotY = iMouse.x / iResolution.x * 8.;
 
-    float zoomDelta = iMouse.z * 0.001; // Adjust as neede
-    zoomFactor += zoomDelta;
-    vec3 cam = vec3(0, 0, -4.0*zoomFactor);
+    vec3 cam = vec3(0, 0, -4.0);
     mat3 rotationMatrix = mat3(
         cos(rotY), 0, sin(rotY),
         0, 1, 0,
