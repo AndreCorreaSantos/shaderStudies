@@ -2,8 +2,9 @@
 
 precision mediump float;
 
-const int MAX_MARCHING_STEPS = 1000;
+const int MAX_MARCHING_STEPS = 100;
 const float THRESHOLD = 0.00000001;
+
 
 float sdSphere(vec3 p,vec3 c,float r) {
   c.x = sin(iTime) * 0.1;
@@ -20,10 +21,10 @@ float sdRoundBox( vec3 p, vec3 b, float r )
 
 
 
-float stepSize = 0.05;
+float stepSize =4.0;
 
 vec3 repeat(vec3 p){
-  float s = 3.0;
+  float s = 3.1415927;
   p.x = p.x - s*round(p.x/s);
   p.y = p.y - s*round(p.y/s);
   p.z = p.z - s*round(p.z/s);
@@ -40,7 +41,7 @@ float scene(vec3 p) {
   float box = sdRoundBox(p, vec3(0.1, 0.1, 0.1), 0.1);
   float sphere = sdSphere(p, vec3(0, 0, 0), 0.25);
   float d = opSmoothUnion(box, sphere, 0.1);
-  return d;
+  return sin(iTime*d*0.1);
 }
 
 vec3 calcNormal(vec3 p) {
@@ -63,7 +64,7 @@ vec3 march(vec3 cam, vec3 dir) {
   for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
 
     float dist = scene(currentPos);
-    if (dist < THRESHOLD) {
+    if ((dist < THRESHOLD)&&(length(currentPos)>0.1)) {
       vec3 normal = calcNormal(currentPos);
       vec3 lightDir = normalize(vec3(-1.0, -1.0, -1.0)); 
 
@@ -98,8 +99,9 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     float rotX = iMouse.y / iResolution.y * 8.; // Adjust the sensitivity as needed
     float rotY = iMouse.x / iResolution.x * 8.;
+    rotY += iTime * 0.1;
 
-    vec3 cam = vec3(0, 0, -4.0);
+    vec3 cam = vec3(0, 0, 0.0);
     mat3 rotationMatrix = mat3(
         cos(rotY), 0, sin(rotY),
         0, 1, 0,
