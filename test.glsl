@@ -22,7 +22,7 @@ float scene(vec3 p) {
    //float box = sdBox(p-vec3(.75,0,0),vec3(.5)) - .5;
    float sphere = sdSphere(p+vec3(0,0,0),2.);
     
-   p.y = abs(p.y);
+//    p.y = abs(p.y);
    sphere = opSmoothUnion(sphere,sdSphere(p+vec3(0,-1.5+sin(iTime),0),1.),.5);
     
    p = mod(p,10.) - 5.;
@@ -76,7 +76,7 @@ vec3 trace(vec3 cam, vec3 dir) {
     float t = 0.;
     float k = 0.;
     vec3 h;
-    for(int i=0;i<25;++i) {
+    for(int i=0;i<100;++i) {
         k=scene(cam+dir*t);
         t+=k;
         if(k<.001)
