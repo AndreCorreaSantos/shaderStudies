@@ -75,7 +75,7 @@ float snoise(vec3 v){
 }
 
 const int MAX_MARCHING_STEPS = 1000;
-const float THRESHOLD1 = 5.0;
+const float THRESHOLD1 = 2.5;
 const float THRESHOLD2 = 0.00000001;
 
 float stepSize = 0.05;
@@ -128,14 +128,18 @@ vec3 march(vec3 cam, vec3 dir) {
     if (dist < THRESHOLD1){
       vec3 normal = calcNormal(currentPos);
       // aply noise to dist in normal direction
-      dist += snoise(currentPos * 10.0+iTime) * 0.1;
+      dist += snoise(currentPos +iTime*0.3);
       if (dist < THRESHOLD2) {
         vec3 normal = calcNormal(currentPos);
         vec3 lightDir = normalize(vec3(-1.0, -1.0, -1.0)); 
 
         float lightIntensity = max(dot(normal, -lightDir), 0.0);
         vec3 ambientLight = vec3(0.2, 0.2, 0.2);
-        vec3 col = vec3(1.0, 1.0, 1.0) * lightIntensity + ambientLight; 
+        //specular
+        vec3 viewDir = normalize(cam - currentPos);
+        vec3 reflectDir = reflect(lightDir, normal);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+        vec3 col = vec3(1.0, 1.0, 1.0) * lightIntensity+ vec3(spec); 
         return col;
       }
       totalDistance += dist;
@@ -165,7 +169,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     float rotX = iMouse.y / iResolution.y * 8.; // Adjust the sensitivity as needed
     float rotY = iMouse.x / iResolution.x * 8.;
-
+  
     vec3 cam = vec3(0, 0, -4.0);
     mat3 rotationMatrix = mat3(
         cos(rotY), 0, sin(rotY),
